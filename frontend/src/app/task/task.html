@@ -1,0 +1,384 @@
+<div class="task-container">
+
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <h1>Task Management System</h1>
+      <p>Organize, track, and complete your tasks efficiently.</p>
+    </div>
+  </div>
+
+
+  <!-- Notification Message -->
+  @if (message) {
+
+    <div
+      class="message"
+      [class.success-message]="messageType === 'success'"
+      [class.error-message]="messageType === 'error'"
+    >
+      <span>
+        {{ message }}
+      </span>
+
+      <button
+        class="message-close"
+        (click)="clearMessage()"
+      >
+        ×
+      </button>
+    </div>
+
+  }
+
+
+  <!-- Loading Indicator -->
+  @if (loading) {
+
+    <div class="loading-message">
+      <span class="spinner"></span>
+      Processing...
+    </div>
+
+  }
+
+
+  <!-- Dashboard Summary -->
+  <div class="task-summary">
+
+    <div class="summary-card total-card">
+
+      <div class="card-icon">📋</div>
+
+      <div>
+        <h3>Total Tasks</h3>
+        <p>{{ totalTasks }}</p>
+      </div>
+
+    </div>
+
+
+    <div class="summary-card pending-card">
+
+      <div class="card-icon">⏳</div>
+
+      <div>
+        <h3>Pending</h3>
+        <p>{{ pendingTasks }}</p>
+      </div>
+
+    </div>
+
+
+    <div class="summary-card progress-card">
+
+      <div class="card-icon">🔄</div>
+
+      <div>
+        <h3>In Progress</h3>
+        <p>{{ inProgressTasks }}</p>
+      </div>
+
+    </div>
+
+
+    <div class="summary-card completed-card">
+
+      <div class="card-icon">✓</div>
+
+      <div>
+        <h3>Completed</h3>
+        <p>{{ completedTasks }}</p>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- Add Task -->
+  <div class="add-task-card">
+
+    <div class="section-title">
+
+      <h2>Add New Task</h2>
+
+      <span>
+        Create a task and start tracking it.
+      </span>
+
+    </div>
+
+
+    <div class="add-task">
+
+      <input
+        type="text"
+        [(ngModel)]="newTask"
+        placeholder="What needs to be done?"
+        (keyup.enter)="addTask()"
+        [disabled]="loading"
+      />
+
+
+      <button
+        class="add-button"
+        (click)="addTask()"
+        [disabled]="loading"
+      >
+        @if (loading) {
+          Adding...
+        } @else {
+          + Add Task
+        }
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- Task List -->
+  <div class="task-list">
+
+    <div class="task-list-header">
+
+      <div>
+
+        <h2>My Tasks</h2>
+
+        <p>
+          Manage your current tasks
+        </p>
+
+      </div>
+
+
+      <span class="task-count">
+
+        {{ filteredTasks.length }}
+
+        @if (filteredTasks.length === 1) {
+          task
+        } @else {
+          tasks
+        }
+
+      </span>
+
+    </div>
+
+
+    <!-- Search and Filter -->
+    <div class="filters">
+
+      <div class="search-box">
+
+        <span>🔍</span>
+
+        <input
+          type="text"
+          [(ngModel)]="searchText"
+          placeholder="Search tasks..."
+        />
+
+      </div>
+
+
+      <select [(ngModel)]="filterStatus">
+
+        <option value="All">
+          All Status
+        </option>
+
+        <option value="Pending">
+          Pending
+        </option>
+
+        <option value="In Progress">
+          In Progress
+        </option>
+
+        <option value="Completed">
+          Completed
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <!-- Tasks -->
+    <div class="tasks-container">
+
+      @for (task of filteredTasks; track task._id) {
+
+        <div class="task-item">
+
+          @if (editId === task._id) {
+
+            <!-- Edit Mode -->
+
+            <div class="edit-container">
+
+              <input
+                class="edit-input"
+                type="text"
+                [(ngModel)]="editTaskTitle"
+                (keyup.enter)="saveTask()"
+                [disabled]="loading"
+              />
+
+
+              <div class="edit-actions">
+
+                <button
+                  class="save-button"
+                  (click)="saveTask()"
+                  [disabled]="loading"
+                >
+                  Save
+                </button>
+
+
+                <button
+                  class="cancel-button"
+                  (click)="cancelEdit()"
+                  [disabled]="loading"
+                >
+                  Cancel
+                </button>
+
+              </div>
+
+            </div>
+
+          } @else {
+
+            <!-- Normal Task -->
+
+            <div class="task-info">
+
+              <div class="task-check">
+
+                @if (task.status === 'Completed') {
+                  ✓
+                } @else {
+                  ○
+                }
+
+              </div>
+
+
+              <div class="task-details">
+
+                <span
+                  class="task-title"
+                  [class.completed-title]="
+                    task.status === 'Completed'
+                  "
+                >
+                  {{ task.title }}
+                </span>
+
+                <small>
+                  Task
+                </small>
+
+              </div>
+
+            </div>
+
+
+            <!-- Status -->
+
+            <select
+              class="status-select"
+              [class.pending-status]="
+                task.status === 'Pending'
+              "
+              [class.progress-status]="
+                task.status === 'In Progress'
+              "
+              [class.completed-status]="
+                task.status === 'Completed'
+              "
+              [value]="task.status"
+              [disabled]="loading"
+              (change)="
+                changeStatus(
+                  task._id,
+                  $any($event.target).value
+                )
+              "
+            >
+
+              <option value="Pending">
+                Pending
+              </option>
+
+              <option value="In Progress">
+                In Progress
+              </option>
+
+              <option value="Completed">
+                Completed
+              </option>
+
+            </select>
+
+
+            <!-- Actions -->
+
+            <div class="task-actions">
+
+              <button
+                class="edit-button"
+                (click)="editTask(task)"
+                [disabled]="loading"
+                title="Edit task"
+              >
+                ✏️
+              </button>
+
+
+              <button
+                class="delete-button"
+                (click)="deleteTask(task._id)"
+                [disabled]="loading"
+                title="Delete task"
+              >
+                🗑️
+              </button>
+
+            </div>
+
+          }
+
+        </div>
+
+      } @empty {
+
+        <div class="no-tasks">
+
+          <div class="empty-icon">
+            📋
+          </div>
+
+          <h3>
+            No tasks found
+          </h3>
+
+          <p>
+            Add a new task or change your search/filter.
+          </p>
+
+        </div>
+
+      }
+
+    </div>
+
+  </div>
+
+</div>
